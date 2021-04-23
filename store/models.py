@@ -1,11 +1,12 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 from django.urls import reverse
 
-# Create your models here.
+
 class ProductManager(models.Manager):
     def get_queryset(self):
         return super(ProductManager, self).get_queryset().filter(is_active=True)
+
 
 class Category(models.Model):
     name = models.CharField(max_length=255, db_index=True)
@@ -43,9 +44,6 @@ class Product(models.Model):
 
     def get_absolute_url(self):
         return reverse('store:product_detail', args=[self.slug])
-    
 
     def __str__(self):
         return self.title
-    
-    

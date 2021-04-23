@@ -1,4 +1,5 @@
-from .models import *
+from .models import Category
+
 
 def categories(request):
     return {
