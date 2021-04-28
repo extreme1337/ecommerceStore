@@ -7,10 +7,19 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
+from .forms import RegistrationForm
+from .models import UserBase
+from .token import account_activation_token
 
-# Create your views here.
-def account_registration(request):
-    
+
+@login_required
+def dashboard(request):
+    #orders = user_orders(request)
+    return render(request,
+                  'account/user/dashboard.html')
+
+def account_register(request):
+
 
     if request.method == 'POST':
         registerForm = RegistrationForm(request.POST)
@@ -20,17 +29,43 @@ def account_registration(request):
             user.set_password(registerForm.cleaned_data['password'])
             user.is_active = False
             user.save()
-            #setup email
             current_site = get_current_site(request)
             subject = 'Activate your Account'
-            message = render_to_string('account/registration/account_activation_email.html', {
+            message = render_to_string('account/registration/account_activation.html', {
                 'user': user,
                 'domain': current_site.domain,
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
                 'token': account_activation_token.make_token(user),
             })
             user.email_user(subject=subject, message=message)
+            return HttpResponse('registered succesfully and activation sent')
     else:
         registerForm = RegistrationForm()
-        
     return render(request, 'account/registration/register.html', {'form': registerForm})
+
+
+def account_activate(request, uidb64, token):
+    try:
+        uid = force_text(urlsafe_base64_decode(uidb64))
+        user = UserBase.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, user.DoesNotExist):
+        user = None
+    if user is not None and account_activation_token.check_token(user, token):
+        user.is_active = True
+        user.save()
+        login(request, user)
+        return redirect('account:dashboard')
+    else:
+        return render(request, 'account/registration/activation_invalid.html')
+
+@login_required
+def edit_details(request):
+    if request.method == 'POST':
+        user_form = UserEdit(isinstance=request.user, data=request.POST)
+
+        if user_form.is_valid():
+            user_form.save()
+    else:
+        user_form = UserEditForm(instance=request.user)
+
+    return render(request, 'account/user/edit_details.html', {'user_form': user_form})
