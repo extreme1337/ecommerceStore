@@ -10,13 +10,14 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from .forms import RegistrationForm, UserEditForm
 from .models import UserBase
 from .token import account_activation_token
+from order.views import user_orders
 
 
 @login_required
 def dashboard(request):
-    #orders = user_orders(request)
+    orders = user_orders(request)
     return render(request,
-                  'account/user/dashboard.html')
+                  'account/user/dashboard.html', {'orders': orders})
 
 def account_register(request):
 
@@ -77,3 +78,5 @@ def delete_user(request):
     user.save()
     logout(request)
     return redirect('account:delete_confirmation')
+
+

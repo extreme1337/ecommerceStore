@@ -7,7 +7,7 @@ SECRET_KEY = '3xk*)i0x#k$btl=(6q)te!19=mp6d)lm1+zl#ts4ewxi3-!vm_'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['yourdomain.com', '127.0.0.1']
+ALLOWED_HOSTS = ['yourdomain.com', '127.0.0.1', 'localhost']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'basket',
     'account',
     'payment',
+    'order',
 ]
 
 MIDDLEWARE = [
@@ -101,6 +102,11 @@ AUTH_USER_MODEL = 'account.UserBase'
 LOGIN_REDIRECT_URL = '/account/dashboard'
 LOGIN_URL = '/account/login/'
 
+BASKET_SESSION_ID = 'basket'
+
 
 #Email setting 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+STRIPE_ENDPOINT_SECRET = 'whsec_0RTTm77UriWJ8cUnt3MS0a4BbKKTeZ1O'

@@ -3,7 +3,8 @@ var stripe = Stripe('pk_test_51IM7baB3tBwIFB39MhtaXJH6FlIdeXh68EOq75eWrlwOp0JGa9
 var elem = document.getElementById('submit');
 clientsecret = elem.getAttribute('data-secret');
 
-var elements = stripe.elemenst()
+// Set up Stripe.js and Elements to use in checkout form
+var elements = stripe.elements();
 var style = {
     base: {
         color: "#000",
@@ -12,51 +13,76 @@ var style = {
     }
 };
 
-var card = elements.create("card", {'style': style});
+
+var card = elements.create("card", {
+    style: style
+});
 card.mount("#card-element");
 
-card.on('change', function(event){
+card.on('change', function (event) {
     var displayError = document.getElementById('card-errors')
-    if(event.error){
+    if (event.error) {
         displayError.textContent = event.error.message;
         $('#card-errors').addClass('alert alert-info');
-    }else{
+    } else {
         displayError.textContent = '';
         $('#card-errors').removeClass('alert alert-info');
     }
 });
 
 var form = document.getElementById('payment-form');
-form.addEventListener('submit', function(ev){
+
+form.addEventListener('submit', function (ev) {
     ev.preventDefault();
 
-    var custName = document.getElementById('custName').nodeValue;
-    var custAdd = document.getElementById('custAdd').nodeValue;
-    var custAdd2 = document.getElementById('custAdd2').nodeValue;
-    var postCode = document.getElementById('postCode').nodeValue;
+    var custName = document.getElementById("custName").value;
+    var custAdd = document.getElementById("custAdd").value;
+    var custAdd2 = document.getElementById("custAdd2").value;
+    var postCode = document.getElementById("postCode").value;
 
 
-    stripe.ConfirmCardPayment(clientsecret, {
-        payment_method:{
-            card: card,
-            billing_details:{
-                address:{
-                    line1: custAdd,
-                    line2: custAdd2
-                },
-                name: custName
-            },
-        }
-    }).then(function(result){
-        if(result.error){
-            console.log('payment error')
-            console.log(result.error.message);
-        }else{
-            if(result.paymentIntent.status === 'succeeded'){
-                console.log('payment processed')
+    $.ajax({
+        type: "POST",
+        url: 'http://127.0.0.1:8000/orders/add/',
+        data: {
+            order_key: clientsecret,
+            csrfmiddlewaretoken: CSRF_TOKEN,
+            action: "post",
+        },
+        success: function (json) {
+            console.log(json.success)
 
-                window.location.replace("http://127.0.0.1:8000/payment/orderplaced/");
-            }
-        }
-    })
+            stripe.confirmCardPayment(clientsecret, {
+                payment_method: {
+                    card: card,
+                    billing_details: {
+                        address: {
+                            line1: custAdd,
+                            line2: custAdd2
+                        },
+                        name: custName
+                    },
+                }
+            }).then(function (result) {
+                if (result.error) {
+                    console.log('payment error')
+                    console.log(result.error.message);
+                } else {
+                    if (result.paymentIntent.status === 'succeeded') {
+                        console.log('payment processed')
+                        // There's a risk of the customer closing the window before callback
+                        // execution. Set up a webhook or plugin to listen for the
+                        // payment_intent.succeeded event that handles any business critical
+                        // post-payment actions.
+                        window.location.replace("http://127.0.0.1:8000/payment/orderplaced/");
+                    }
+                }
+            });
+
+        },
+        error: function (xhr, errmsg, err) {},
+    });
+
+
+
 });
