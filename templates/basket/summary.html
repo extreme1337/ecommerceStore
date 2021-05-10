@@ -1,4 +1,9 @@
-{% extends "../store/base.html" %} {% load static %} {% block title %}Basket Summary{%endblock %} 
+{% extends "../base.html" %} {% load static %} {% block title %}Basket Summary{%endblock %} 
+
+{% block stylesheet %}
+<link rel="stylesheet" href="{% static 'basket/css/basket.css' %}">
+{% endblock stylesheet %}
+  
 
 {% block content %}
 
