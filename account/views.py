@@ -7,19 +7,48 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
+from order.views import user_orders
+
 from .forms import RegistrationForm, UserEditForm
 from .models import UserBase
 from .token import account_activation_token
-from order.views import user_orders
 
 
 @login_required
 def dashboard(request):
     orders = user_orders(request)
     return render(request,
-                  'account/dashboard/dashboard.html', {'orders': orders})
+                  'account/dashboard/dashboard.html',
+                  {'section': 'profile', 'orders': orders})
+
+
+@login_required
+def edit_details(request):
+    if request.method == 'POST':
+        user_form = UserEditForm(instance=request.user, data=request.POST)
+
+        if user_form.is_valid():
+            user_form.save()
+    else:
+        user_form = UserEditForm(instance=request.user)
+
+    return render(request,
+                  'account/dashboard/edit_details.html', {'user_form': user_form})
+
+
+@login_required
+def delete_user(request):
+    user = UserBase.objects.get(user_name=request.user)
+    user.is_active = False
+    user.save()
+    logout(request)
+    return redirect('account:delete_confirmation')
+
 
 def account_register(request):
+
+    if request.user.is_authenticated:
+        return redirect('account:dashboard')
 
     if request.method == 'POST':
         registerForm = RegistrationForm(request.POST)
@@ -31,14 +60,14 @@ def account_register(request):
             user.save()
             current_site = get_current_site(request)
             subject = 'Activate your Account'
-            message = render_to_string('account/registration/account_activation.html', {
+            message = render_to_string('account/registration/account_activation_email.html', {
                 'user': user,
                 'domain': current_site.domain,
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
                 'token': account_activation_token.make_token(user),
             })
             user.email_user(subject=subject, message=message)
-            return HttpResponse('registered succesfully and activation sent')
+            return render(request, 'account/registration/register_email_confirm.html', {'form': registerForm})
     else:
         registerForm = RegistrationForm()
     return render(request, 'account/registration/register.html', {'form': registerForm})
@@ -57,23 +86,3 @@ def account_activate(request, uidb64, token):
         return redirect('account:dashboard')
     else:
         return render(request, 'account/registration/activation_invalid.html')
-
-@login_required
-def edit_details(request):
-    if request.method == 'POST':
-        user_form = UserEditForm(isinstance=request.user, data=request.POST)
-
-        if user_form.is_valid():
-            user_form.save()
-    else:
-        user_form = UserEditForm(instance=request.user)
-
-    return render(request, 'account/dashboard/edit_details.html', {'user_form': user_form})
-
-@login_required
-def delete_user(request):
-    user = UserBase.objects.get(user_name=request.user)
-    user.is_active = False
-    user.save()
-    logout(request)
-    return redirect('account:delete_confirmation')
