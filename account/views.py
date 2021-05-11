@@ -17,10 +17,9 @@ from order.views import user_orders
 def dashboard(request):
     orders = user_orders(request)
     return render(request,
-                  'account/user/dashboard.html', {'orders': orders})
+                  'account/dashboard/dashboard.html', {'orders': orders})
 
 def account_register(request):
-
 
     if request.method == 'POST':
         registerForm = RegistrationForm(request.POST)
@@ -62,14 +61,14 @@ def account_activate(request, uidb64, token):
 @login_required
 def edit_details(request):
     if request.method == 'POST':
-        user_form = UserEdit(isinstance=request.user, data=request.POST)
+        user_form = UserEditForm(isinstance=request.user, data=request.POST)
 
         if user_form.is_valid():
             user_form.save()
     else:
         user_form = UserEditForm(instance=request.user)
 
-    return render(request, 'account/user/edit_details.html', {'user_form': user_form})
+    return render(request, 'account/dashboard/edit_details.html', {'user_form': user_form})
 
 @login_required
 def delete_user(request):
@@ -78,5 +77,3 @@ def delete_user(request):
     user.save()
     logout(request)
     return redirect('account:delete_confirmation')
-
-
