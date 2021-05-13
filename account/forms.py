@@ -4,8 +4,9 @@ from django.contrib.auth.forms import (
     PasswordResetForm,
     SetPasswordForm,
 )
+from django.forms import fields
 
-from .models import UserBase
+from .models import Address, Customer
 
 
 class UserLoginForm(AuthenticationForm):
@@ -34,7 +35,7 @@ class RegistrationForm(forms.ModelForm):
     password2 = forms.CharField(label="Repeat password", widget=forms.PasswordInput)
 
     class Meta:
-        model = UserBase
+        model = Customer
         fields = (
             "user_name",
             "email",
@@ -42,7 +43,7 @@ class RegistrationForm(forms.ModelForm):
 
     def clean_username(self):
         user_name = self.cleaned_data["user_name"].lower()
-        r = UserBase.objects.filter(user_name=user_name)
+        r = Customer.objects.filter(user_name=user_name)
         if r.count():
             raise forms.ValidationError("Username already exists")
         return user_name
@@ -55,7 +56,7 @@ class RegistrationForm(forms.ModelForm):
 
     def clean_email(self):
         email = self.cleaned_data["email"]
-        if UserBase.objects.filter(email=email).exists():
+        if Customer.objects.filter(email=email).exists():
             raise forms.ValidationError("Please use another Email, that is already taken")
         return email
 
@@ -78,7 +79,7 @@ class PwdResetForm(PasswordResetForm):
 
     def clean_email(self):
         email = self.cleaned_data["email"]
-        u = UserBase.objects.filter(email=email)
+        u = Customer.objects.filter(email=email)
         if not u:
             raise forms.ValidationError("Unfortunatley we can not find that email address")
         return email
@@ -133,7 +134,7 @@ class UserEditForm(forms.ModelForm):
     )
 
     class Meta:
-        model = UserBase
+        model = Customer
         fields = (
             "email",
             "user_name",
@@ -144,3 +145,28 @@ class UserEditForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["user_name"].required = True
         self.fields["email"].required = True
+
+
+class UserAddressForm(forms.ModelForm):
+    class Meta:
+        model = Address
+        fields = ["full_name", "phone", "address_line", "address_line2", "town_city", "postcode"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["full_name"].widget.attrs.update(
+            {"class": "form-control mb-2 account-form", "placeholder": "Full Name"}
+        )
+        self.fields["phone"].widget.attrs.update({"class": "form-control mb-2 account-form", "placeholder": "Phone"})
+        self.fields["address_line"].widget.attrs.update(
+            {"class": "form-control mb-2 account-form", "placeholder": "Full Name"}
+        )
+        self.fields["address_line2"].widget.attrs.update(
+            {"class": "form-control mb-2 account-form", "placeholder": "Full Name"}
+        )
+        self.fields["town_city"].widget.attrs.update(
+            {"class": "form-control mb-2 account-form", "placeholder": "Full Name"}
+        )
+        self.fields["postcode"].widget.attrs.update(
+            {"class": "form-control mb-2 account-form", "placeholder": "Full Name"}
+        )
