@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "account",
     "orders",
     "mptt",
+    "checkout",
 ]
 
 MIDDLEWARE = [
@@ -97,15 +98,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 # Basket session ID
 BASKET_SESSION_ID = "basket"
 
-# Stripe Payment
-os.environ.setdefault(
-    "STRIPE_PUBLISHABLE_KEY",
-    "pk_test_51IM7baB3tBwIFB39MhtaXJH6FlIdeXh68EOq75eWrlwOp0JGa9PTOTQFh58qfQU4NTSSWK69JlfCTHFEFwaSthwY00GDAq0DyQ",
-)
-STRIPE_SECRET_KEY = (
-    "sk_test_51IM7baB3tBwIFB397vqAR3lyATiievboTA95iUrB1g5D1EJqTzIuIxkvxDZOpggSqUAlXNFOxm5u6QlJsY9LLJxR00ghZbeIoF"
-)
-# stripe listen --forward-to localhost:8000/payment/webhook/
 
 # Custom user model
 AUTH_USER_MODEL = "account.Customer"

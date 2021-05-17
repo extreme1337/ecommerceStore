@@ -8,6 +8,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from orders.models import Order
 from orders.views import user_orders
 from store.models import Product
 
@@ -134,6 +135,11 @@ def delete_address(request, id):
 def set_default(request, id):
     Address.objects.filter(customer=request.user, default=True).update(default=False)
     Address.objects.filter(pk=id, customer=request.user).update(default=True)
+
+    previous_url = request.META.get("HTTP_REFERER")
+    if "delivery_address" in previous_url:
+        return redirect("checkout:delivery_address")
+
     return redirect("account:addresses")
 
 
@@ -153,3 +159,10 @@ def add_to_wishlist(request, id):
 def wishlist(request):
     products = Product.objects.filter(users_wishlist=request.user)
     return render(request, "account/dashboard/user_wish_list.html", {"wishlist": products})
+
+
+@login_required
+def user_orders(request):
+    user_id = request.user.id
+    orders = Order.objects.filter(user_id=user_id).filter(billing_status=True)
+    return render(request, "account/dashboard/user_orders.html", {"orders": orders})
